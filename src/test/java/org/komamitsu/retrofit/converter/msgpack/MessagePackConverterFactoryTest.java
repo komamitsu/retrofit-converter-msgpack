@@ -116,7 +116,7 @@ public class MessagePackConverterFactoryTest
     {
         ObjectMapper objectMapper = new ObjectMapper(new MessagePackFactory());
 
-        Pojo requestPojo = new Pojo(42, 3.14f, "Hello");
+        Pojo requestPojo = new Pojo(42, (float) Math.PI, "Hello");
         Pojo responsePojo = new Pojo(99, 1.23f, "World");
         server.enqueue(new MockResponse().setBody(
                 new Buffer().write(objectMapper.writeValueAsBytes(responsePojo))));
