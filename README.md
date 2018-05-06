@@ -9,7 +9,7 @@ Retrofit Converter for MessagePack
 
 ```groovy
 dependencies {
-    compile 'org.komamitsu:retrofit-converter-msgpack:1.0.0'
+    implementation 'org.komamitsu:retrofit-converter-msgpack:1.0.0'
 }
 ```
 
