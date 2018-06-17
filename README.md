@@ -11,7 +11,7 @@ Retrofit Converter for MessagePack
 
 ```groovy
 dependencies {
-    implementation 'org.komamitsu:retrofit-converter-msgpack:1.0.0'
+    implementation 'org.komamitsu:retrofit-converter-msgpack:x.x.x'
 }
 ```
 
@@ -21,7 +21,7 @@ dependencies {
 <dependency>
     <groupId>org.komamitsu</groupId>
     <artifactId>retrofit-converter-msgpack</artifactId>
-    <version>1.0.0</version>
+    <version>x.x.x</version>
 </dependency>
 ```
 
