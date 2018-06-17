@@ -9,7 +9,7 @@ apply plugin: 'com.github.johnrengelman.shadow'
 
 group = 'org.komamitsu'
 archivesBaseName = 'retrofit-converter-msgpack'
-version = '1.1.0'
+version = '1.2.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
