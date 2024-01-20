@@ -1,30 +1,27 @@
-apply plugin: 'java'
-apply plugin: "findbugs"
-apply plugin: 'jacoco'
-apply plugin: 'maven'
-apply plugin: 'signing'
-apply plugin: 'com.github.kt3k.coveralls'
-apply plugin: 'com.github.johnrengelman.shadow'
-
-
-group = 'org.komamitsu'
-archivesBaseName = 'retrofit-converter-msgpack'
-version = '1.2.0-SNAPSHOT'
-
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
-
-task wrapper(type: Wrapper) {
-    //INFO: Update this value in gradle-wrapper.properties
-    gradleVersion = '4.3.1'
+plugins {
+    id "java-library"
+    id "maven-publish"
+    id "signing"
+    id "com.diffplug.spotless" version "6.24.0"
 }
 
-def deployUsername = project.hasProperty('ossrhUsername') ? ossrhUsername : ''
-def deployPassword = project.hasProperty('ossrhPassword') ? ossrhPassword : ''
+project.version = '1.2.0'
+group = "org.komamitsu"
 
 repositories {
     mavenCentral()
-    mavenLocal()
+}
+
+// TODO: Use JUnit5
+/*
+tasks.withType(Test) {
+    useJUnitPlatform()
+}
+*/
+
+java {
+    withJavadocJar()
+    withSourcesJar()
 }
 
 dependencies {
@@ -38,93 +35,75 @@ dependencies {
     compileOnly 'com.squareup.retrofit2:retrofit:2.9.0'
 }
 
-findbugs {
-    effort = 'max'
-}
-
-tasks.withType(FindBugs) {
-    reports {
-        xml.enabled = false
-        html.enabled = true
-    }
-}
-
-task javadocJar(type: Jar) {
-    classifier = 'javadoc'
-    from javadoc
-}
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from sourceSets.main.allSource
-}
-
-artifacts {
-    archives javadocJar, sourcesJar, shadowJar
-}
-
-signing {
-    sign configurations.archives
-}
-
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-
-            repository(url: "https://oss.sonatype.org/service/local/staging/deploy/maven2/") {
-                authentication(userName: deployUsername, password: deployPassword)
-            }
-
-            snapshotRepository(url: "https://oss.sonatype.org/content/repositories/snapshots/") {
-                authentication(userName: deployUsername, password: deployPassword)
-            }
-
-            pom.project {
-                name 'retrofit-converter-msgpack'
-                description "Retrofit Converter for MessagePack"
-                packaging 'jar'
-                url 'https://github.com/komamitsu/retrofit-converter-msgpack'
-                scm {
-                    connection 'scm:git:git://github.com/komamitsu/retrofit-converter-msgpack.git'
-                    developerConnection 'scm:git:git@github.com:komamitsu/retrofit-converter-msgpack.git'
-                    url 'https://github.com/komamitsu/retrofit-converter-msgpack'
-                }
-
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            artifactId = 'retrofit-converter-msgpack'
+            from components.java
+            pom {
+                name = 'Retrofit Converter for MessagePack'
+                description = 'Retrofit Converter for MessagePack'
+                url = 'https://github.com/komamitsu/retrofit-converter-msgpack'
                 licenses {
                     license {
-                        name 'The Apache License, Version 2.0'
-                        url 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                        name = "The Apache License, Version 2.0"
+                        url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
                     }
                 }
-
                 developers {
                     developer {
-                        id 'komamitsu'
-                        name 'Mitsunori Komatsu'
-                        email 'komamitsu@gmail.com'
+                        id = 'komamitsu'
+                        name = 'Mitsunori Komatsu'
+                        email = 'komamitsu@gmail.com'
                     }
                 }
+                scm {
+                    connection = 'scm:git:git://github.com/komamitsu/retrofit-converter-msgpack.git'
+                    developerConnection = 'scm:git:git@github.com:komamitsu/retrofit-converter-msgpack.git'
+                    url = 'https://github.com/komamitsu/retrofit-converter-msgpack'
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            url = uri(project.version.toString().endsWith("-SNAPSHOT") ?
+                    "https://oss.sonatype.org/content/repositories/snapshots/" :
+                    "https://oss.sonatype.org/service/local/staging/deploy/maven2/")
+            credentials {
+                username = project.hasProperty("ossrhUsername") ?
+                        project.property("ossrhUsername").toString() : ""
+                password = project.hasProperty("ossrhPassword") ?
+                        project.property("ossrhPassword").toString() : ""
             }
         }
     }
 }
 
-buildscript {
-    repositories {
-        mavenCentral()
-        jcenter()
+signing {
+    if (project.hasProperty("signing.gnupg.keyName")) {
+        setRequired(true)
     }
-
-    dependencies {
-        classpath 'org.kt3k.gradle.plugin:coveralls-gradle-plugin:2.6.3'
-        classpath 'com.github.jengelman.gradle.plugins:shadow:6.1.0'
+    else if (project.hasProperty("signingKey")) {
+        // def signingKeyId = project.property("signingKeyId").toString()
+        def signingKey = project.property("signingKey").toString()
+        def signingPassword = project.property("signingPassword").toString()
+        // useInMemoryPgpKeys(signingKeyId, signingKey, signingPassword)
+        useInMemoryPgpKeys(signingKey, signingPassword)
+        setRequired(true)
     }
+    else {
+        setRequired(false)
+    }
+    sign publishing.publications.mavenJava
 }
 
-jacocoTestReport {
-    reports {
-        xml.enabled = true // coveralls plugin depends on xml format report
-        html.enabled = true
-    }
+spotless {
+  java {
+    importOrder()
+    removeUnusedImports()
+    googleJavaFormat('1.19.1')
+    formatAnnotations()
+  }
 }
+
