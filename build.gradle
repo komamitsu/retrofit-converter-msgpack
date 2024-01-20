@@ -31,7 +31,7 @@ dependencies {
     testImplementation 'com.squareup.retrofit2:retrofit:2.9.0'
     testImplementation 'com.squareup.okhttp3:mockwebserver:4.12.0'
     implementation 'org.slf4j:slf4j-api:2.0.9'
-    implementation 'org.msgpack:jackson-dataformat-msgpack:0.8.16'
+    implementation 'org.msgpack:jackson-dataformat-msgpack:0.9.7'
     compileOnly 'com.squareup.retrofit2:retrofit:2.9.0'
 }
 
