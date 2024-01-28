@@ -1,18 +1,15 @@
 package org.komamitsu.retrofit.converter.msgpack;
 
-import static org.hamcrest.Matchers.is;
-import static org.junit.Assert.*;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
+import java.util.Objects;
+
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
 import okio.Buffer;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.*;
 import org.msgpack.jackson.dataformat.MessagePackFactory;
 import retrofit2.Call;
 import retrofit2.Response;
@@ -21,7 +18,8 @@ import retrofit2.http.Body;
 import retrofit2.http.POST;
 
 public class MessagePackConverterFactoryTest {
-  @Rule public final MockWebServer server = new MockWebServer();
+  private static MockWebServer server;
+
   private Service service;
 
   public static class Pojo {
@@ -52,30 +50,15 @@ public class MessagePackConverterFactoryTest {
 
     @Override
     public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
-      if (o == null || getClass() != o.getClass()) {
-        return false;
-      }
-
+      if (this == o) return true;
+      if (o == null || getClass() != o.getClass()) return false;
       Pojo pojo = (Pojo) o;
-
-      if (i != pojo.i) {
-        return false;
-      }
-      if (Float.compare(pojo.f, f) != 0) {
-        return false;
-      }
-      return s != null ? s.equals(pojo.s) : pojo.s == null;
+      return i == pojo.i && Float.compare(pojo.f, f) == 0 && Objects.equals(s, pojo.s);
     }
 
     @Override
     public int hashCode() {
-      int result = i;
-      result = 31 * result + (f != +0.0f ? Float.floatToIntBits(f) : 0);
-      result = 31 * result + (s != null ? s.hashCode() : 0);
-      return result;
+      return Objects.hash(i, f, s);
     }
   }
 
@@ -84,7 +67,18 @@ public class MessagePackConverterFactoryTest {
     Call<Pojo> postPojo(@Body Pojo pojo);
   }
 
-  @Before
+  @BeforeAll
+  public static void beforeAll() throws IOException {
+    server = new MockWebServer();
+    server.start();
+  }
+
+  @AfterAll
+  public static void afterAll() throws IOException {
+    server.close();
+  }
+
+  @BeforeEach
   public void setUp() {
     Retrofit retrofit =
         new Retrofit.Builder()
@@ -100,16 +94,17 @@ public class MessagePackConverterFactoryTest {
 
     Pojo requestPojo = new Pojo(42, (float) Math.PI, "Hello");
     Pojo responsePojo = new Pojo(99, 1.23f, "World");
-    server.enqueue(
-        new MockResponse()
-            .setBody(new Buffer().write(objectMapper.writeValueAsBytes(responsePojo))));
+    try (Buffer buffer = new Buffer()) {
+      buffer.write(objectMapper.writeValueAsBytes(responsePojo));
+      server.enqueue(new MockResponse().setBody(buffer));
 
-    Response<Pojo> response = service.postPojo(requestPojo).execute();
-    assertThat(response.body(), is(responsePojo));
+      Response<Pojo> response = service.postPojo(requestPojo).execute();
+      Assertions.assertEquals(responsePojo, response.body());
 
-    RecordedRequest recordedRequest = server.takeRequest();
-    Pojo recordedPojo =
-        objectMapper.readValue(recordedRequest.getBody().readByteArray(), Pojo.class);
-    assertThat(recordedPojo, is(requestPojo));
+      RecordedRequest recordedRequest = server.takeRequest();
+      Pojo recordedPojo =
+              objectMapper.readValue(recordedRequest.getBody().readByteArray(), Pojo.class);
+      Assertions.assertEquals(requestPojo, recordedPojo);
+    }
   }
 }
