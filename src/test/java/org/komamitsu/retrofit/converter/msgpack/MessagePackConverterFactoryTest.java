@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.Objects;
-
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import okhttp3.mockwebserver.RecordedRequest;
@@ -103,7 +102,7 @@ public class MessagePackConverterFactoryTest {
 
       RecordedRequest recordedRequest = server.takeRequest();
       Pojo recordedPojo =
-              objectMapper.readValue(recordedRequest.getBody().readByteArray(), Pojo.class);
+          objectMapper.readValue(recordedRequest.getBody().readByteArray(), Pojo.class);
       Assertions.assertEquals(requestPojo, recordedPojo);
     }
   }
