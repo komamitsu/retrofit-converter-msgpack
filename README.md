@@ -5,6 +5,10 @@
 
 Retrofit Converter for MessagePack
 
+## Prerequisites
+
+- JDK 11 or later
+
 ## Install
 
 ### Gradle
